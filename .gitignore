@@ -1,4 +1,6 @@
 .venv
 data/
+checkpoints/
+__pycache__
 *.pth
 *.tif

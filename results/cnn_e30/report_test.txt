@@ -1,0 +1,18 @@
+[cnn_e30 | test] loss=0.088 acc=0.972 macro_f1=0.971
+
+                      precision    recall  f1-score   support
+
+          AnnualCrop      0.947     0.956     0.951       450
+              Forest      0.989     1.000     0.994       450
+HerbaceousVegetation      0.973     0.956     0.964       450
+             Highway      0.968     0.976     0.972       375
+          Industrial      0.981     0.984     0.983       375
+             Pasture      0.957     0.970     0.964       300
+       PermanentCrop      0.952     0.944     0.948       375
+         Residential      0.991     0.991     0.991       450
+               River      0.957     0.949     0.953       375
+             SeaLake      0.993     0.987     0.990       450
+
+            accuracy                          0.972      4050
+           macro avg      0.971     0.971     0.971      4050
+        weighted avg      0.972     0.972     0.972      4050

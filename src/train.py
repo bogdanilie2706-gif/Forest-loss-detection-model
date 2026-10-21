@@ -7,6 +7,7 @@ from torch import nn
 from dataset import get_dataloaders
 from model import SimpleCNN
 from evaluate import evaluate
+import argparse
 
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
@@ -27,7 +28,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     return total_loss / n, correct / n
 
 
-def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42):
+def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42, name="cnn"):
     torch.manual_seed(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)
@@ -39,7 +40,8 @@ def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42):
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
 
-    Path("checkpoints").mkdir(exist_ok=True)
+    out_dir = Path("checkpoints") / name
+    out_dir.mkdir(parents=True, exist_ok=True)
     best_f1, history = 0.0, []
 
     for epoch in range(1, epochs + 1):
@@ -55,11 +57,16 @@ def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42):
 
         if val["macro_f1"] > best_f1:
             best_f1 = val["macro_f1"]
-            torch.save(model.state_dict(), "checkpoints/best.pth")
+            torch.save(model.state_dict(), out_dir / "best.pth")
 
-    Path("checkpoints/history.json").write_text(json.dumps(history, indent=2))
+    (out_dir / "history.json").write_text(json.dumps(history, indent=2))
     print(f"Cel mai bun F1 pe validare: {best_f1:.3f}")
 
 
 if __name__ == "__main__":
-    main()
+    p = argparse.ArgumentParser()
+    p.add_argument("--epochs", type=int, default=15)
+    p.add_argument("--name", default="cnn")
+    p.add_argument("--lr", type=float, default=1e-3)
+    args = p.parse_args()
+    main(epochs=args.epochs, lr=args.lr, name=args.name)

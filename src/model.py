@@ -1,5 +1,16 @@
 import torch
 from torch import nn
+from torchvision import models
+
+def build_model(arch, num_classes=10, in_channels=3, pretrained=True):
+    if arch == "cnn":
+        return SimpleCNN(in_channels, num_classes)
+    if arch == "resnet18":
+        weights = models.ResNet18_Weights.DEFAULT if pretrained else None
+        m = models.resnet18(weights=weights)
+        m.fc = nn.Linear(m.fc.in_features, num_classes)  # 1000 -> 10 clase
+        return m
+    raise ValueError(f"Arhitectură necunoscută: {arch}")
 
 
 def conv_block(in_ch, out_ch):

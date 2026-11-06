@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from dataset import get_dataloaders
-from model import SimpleCNN
+from model import build_model
 from evaluate import evaluate
 import argparse
 
@@ -28,14 +28,15 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     return total_loss / n, correct / n
 
 
-def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42, name="cnn"):
+def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42, name="cnn",
+         arch="cnn", image_size=64):
     torch.manual_seed(seed)
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Device:", device)
 
-    train_loader, val_loader, _, classes = get_dataloaders(seed=seed)
+    train_loader, val_loader, _, classes = get_dataloaders(seed=seed, image_size=image_size)
 
-    model = SimpleCNN(in_channels=3, num_classes=len(classes)).to(device)
+    model = build_model(arch, num_classes=len(classes)).to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
@@ -68,5 +69,8 @@ if __name__ == "__main__":
     p.add_argument("--epochs", type=int, default=15)
     p.add_argument("--name", default="cnn")
     p.add_argument("--lr", type=float, default=1e-3)
+    p.add_argument("--arch", default="cnn", choices=["cnn", "resnet18"])
+    p.add_argument("--image-size", type=int, default=64)
     args = p.parse_args()
-    main(epochs=args.epochs, lr=args.lr, name=args.name)
+    main(epochs=args.epochs, lr=args.lr, name=args.name,
+         arch=args.arch, image_size=args.image_size)

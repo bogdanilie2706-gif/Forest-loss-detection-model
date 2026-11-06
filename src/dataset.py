@@ -7,20 +7,19 @@ IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
 
-def get_dataloaders(root="data", batch_size=64, seed=42, num_workers=4):
-    # Augmentări doar pe antrenare. Flip-urile sunt sigure la imagini
-    # satelitare, pentru că nu există un "sus" corect.
-    train_tf = transforms.Compose([
+def get_dataloaders(root="data", batch_size=64, seed=42, num_workers=2, image_size=64):
+    resize = [transforms.Resize(image_size)] if image_size != 64 else []
+    train_tf = transforms.Compose(resize + [
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
-    eval_tf = transforms.Compose([
+    eval_tf = transforms.Compose(resize + [
         transforms.ToTensor(),
         transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
     ])
-
+    # restul funcției rămâne neschimbat
     # Același set de date, încărcat de două ori cu transformări diferite
     ds_train = datasets.EuroSAT(root, transform=train_tf, download=True)
     ds_eval = datasets.EuroSAT(root, transform=eval_tf, download=False)

@@ -8,7 +8,8 @@ ARCH    ?= cnn
 EPOCHS  ?= 30
 LR      ?= 1e-3
 IMG     ?= 64
-NAME    ?= $(ARCH)_e$(EPOCHS)
+
+NAME     = $(ARCH)_e$(EPOCHS)
 
 .PHONY: help data train train-bg logs status stop eval test \
         resnet resnet-eval resnet-test gpu
@@ -45,9 +46,10 @@ train-bg:
 logs:
 	tail -f logs/$(NAME).txt
 
-# Parantezele din [s]rc fac ca pattern-ul să nu se potrivească cu propria comandă
 status:
-	@pgrep -af "[s]rc/train.py" || echo "Nu rulează nicio antrenare."
+	@bash scripts/status.sh
+
+# Parantezele din [s]rc fac ca pattern-ul să nu se potrivească cu propria comandă
 
 stop:
 	@pkill -f "[s]rc/train.py" && echo "Oprit." || echo "Nu rula nimic."

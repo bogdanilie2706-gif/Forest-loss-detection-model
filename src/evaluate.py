@@ -10,7 +10,7 @@ from torch import nn
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, f1_score
 
 from dataset import get_dataloaders
-from model import SimpleCNN
+from model import build_model
 
 
 @torch.no_grad()
@@ -61,16 +61,16 @@ def save_curves(history_path, out_path):
     plt.close(fig)
 
 
-def main(name, split):
+def main(name, split, arch, image_size):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    _, val_loader, test_loader, classes = get_dataloaders(num_workers=0)
+    _, val_loader, test_loader, classes = get_dataloaders(image_size=image_size)
     loader = {"val": val_loader, "test": test_loader}[split]
 
     ckpt_dir = Path("checkpoints") / name
     out_dir = Path("results") / name
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    model = SimpleCNN(num_classes=len(classes)).to(device)
+    model = build_model(arch, num_classes=len(classes), pretrained=False).to(device)
     model.load_state_dict(torch.load(ckpt_dir / "best.pth", map_location=device))
 
     res = evaluate(model, loader, nn.CrossEntropyLoss(), device)
@@ -95,5 +95,7 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--name", required=True, help="numele rulării, ex. cnn_e15")
     p.add_argument("--split", choices=["val", "test"], default="val")
+    p.add_argument("--arch", default="cnn", choices=["cnn", "resnet18"])
+    p.add_argument("--image-size", type=int, default=64)
     args = p.parse_args()
-    main(args.name, args.split)
+    main(args.name, args.split, args.arch, args.image_size)

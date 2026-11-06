@@ -1,0 +1,18 @@
+[resnet18_e15 | val] loss=0.050 acc=0.985 macro_f1=0.984
+
+                      precision    recall  f1-score   support
+
+          AnnualCrop      0.980     0.980     0.980       450
+              Forest      0.998     0.998     0.998       450
+HerbaceousVegetation      0.963     0.973     0.968       450
+             Highway      0.989     0.973     0.981       375
+          Industrial      0.992     1.000     0.996       375
+             Pasture      0.983     0.967     0.975       300
+       PermanentCrop      0.963     0.965     0.964       375
+         Residential      1.000     0.998     0.999       450
+               River      0.984     0.989     0.987       375
+             SeaLake      0.996     0.998     0.997       450
+
+            accuracy                          0.985      4050
+           macro avg      0.985     0.984     0.984      4050
+        weighted avg      0.985     0.985     0.985      4050

@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import time
 
 import torch
 from torch import nn
@@ -46,6 +47,7 @@ def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42, name="cnn",
     best_f1, history = 0.0, []
 
     for epoch in range(1, epochs + 1):
+        t0 = time.time()
         tr_loss, tr_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
         val = evaluate(model, val_loader, criterion, device)
         scheduler.step()
@@ -54,7 +56,7 @@ def main(epochs=15, lr=1e-3, weight_decay=1e-4, seed=42, name="cnn",
                         "val_loss": val["loss"], "val_acc": val["acc"],
                         "val_f1": val["macro_f1"]})
         print(f"Epoca {epoch:02d} | train loss {tr_loss:.3f} acc {tr_acc:.3f} | "
-              f"val loss {val['loss']:.3f} acc {val['acc']:.3f} f1 {val['macro_f1']:.3f}")
+              f"val loss {val['loss']:.3f} acc {val['acc']:.3f} f1 {val['macro_f1']:.3f} | {time.time() - t0:.0f}s")
 
         if val["macro_f1"] > best_f1:
             best_f1 = val["macro_f1"]

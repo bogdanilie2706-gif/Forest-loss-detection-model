@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
@@ -5,6 +7,19 @@ from sklearn.model_selection import train_test_split
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
+
+
+def get_split_indices(targets: Sequence[int], seed: int = 42):
+    """Return stratified train, validation, and test indices."""
+    indices = list(range(len(targets)))
+    train_idx, temp_idx = train_test_split(
+        indices, test_size=0.30, stratify=targets, random_state=seed
+    )
+    val_idx, test_idx = train_test_split(
+        temp_idx, test_size=0.50,
+        stratify=[targets[i] for i in temp_idx], random_state=seed
+    )
+    return train_idx, val_idx, test_idx
 
 
 def get_dataloaders(root="data", batch_size=64, seed=42, num_workers=2, image_size=64):
@@ -24,17 +39,8 @@ def get_dataloaders(root="data", batch_size=64, seed=42, num_workers=2, image_si
     ds_train = datasets.EuroSAT(root, transform=train_tf, download=True)
     ds_eval = datasets.EuroSAT(root, transform=eval_tf, download=False)
 
-    targets = ds_train.targets
-    indices = list(range(len(targets)))
-
     # 70% antrenare / 15% validare / 15% test, păstrând proporția claselor
-    train_idx, temp_idx = train_test_split(
-        indices, test_size=0.30, stratify=targets, random_state=seed
-    )
-    val_idx, test_idx = train_test_split(
-        temp_idx, test_size=0.50,
-        stratify=[targets[i] for i in temp_idx], random_state=seed
-    )
+    train_idx, val_idx, test_idx = get_split_indices(ds_train.targets, seed)
 
     train_loader = DataLoader(Subset(ds_train, train_idx), batch_size=batch_size,
                               shuffle=True, num_workers=num_workers)

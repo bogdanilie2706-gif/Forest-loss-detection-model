@@ -53,7 +53,51 @@ def make_transform(image_size):
     )
 
 
-def register_activation_hooks(layers,):
+def predict_all(
+    model: nn.Module,
+    samples: list[tuple[Image.Image, int]],
+    image_size: int,
+    device: torch.device,
+    batch_size: int = 64,
+) -> np.ndarray:
+    """Predict labels for every sample using the model's evaluation transform."""
+    if batch_size < 1:
+        raise ValueError("batch_size must be positive")
+    transform = make_transform(image_size)
+    predictions = []
+
+    with torch.no_grad():
+        for start in range(0, len(samples), batch_size):
+            batch = samples[start : start + batch_size]
+            images = torch.stack([transform(image) for image, _ in batch]).to(device)
+            predictions.append(model(images).argmax(dim=1).cpu().numpy())
+
+    if not predictions:
+        return np.empty(0, dtype=np.int64)
+    return np.concatenate(predictions)
+
+
+def get_hook_layers(model: nn.Module, arch: str) -> dict[str, nn.Module]:
+    """Return the activation layers to visualize for a supported architecture."""
+    if arch == "cnn":
+        return {
+            "block1": model.features[0][2],
+            "block2": model.features[1][2],
+            "block3": model.features[2][2],
+            "block4": model.features[3][2],
+        }
+    if arch == "resnet18":
+        return {
+            "stem": model.relu,
+            "layer1": model.layer1,
+            "layer2": model.layer2,
+            "layer3": model.layer3,
+            "layer4": model.layer4,
+        }
+    raise ValueError(f"Unsupported architecture: {arch}")
+
+
+def register_activation_hooks(layers):
     """Capture selected layer outputs and return a hook cleanup function."""
     activations: dict[str, torch.Tensor] = {}
     handles = []

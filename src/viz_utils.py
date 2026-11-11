@@ -15,7 +15,7 @@ else:
     from model import build_model
 
 
-def denormalize(t: torch.Tensor):
+def denormalize(t):
     """Convert a normalized CHW image tensor to a clipped HWC array."""
     if t.ndim != 3 or t.shape[0] != 3:
         raise ValueError("Expected a CHW tensor with 3 channels")
@@ -26,7 +26,7 @@ def denormalize(t: torch.Tensor):
     return np.clip(image * std + mean, 0.0, 1.0)
 
 
-def load_model(name: str, arch: str, device: torch.device | str):
+def load_model(name, arch, device):
     """Load a run's best checkpoint and return the model in evaluation mode."""
     model = build_model(arch, num_classes=10, pretrained=False).to(device)
     checkpoint_path = Path("checkpoints") / name / "best.pth"
@@ -34,14 +34,14 @@ def load_model(name: str, arch: str, device: torch.device | str):
     return model.eval()
 
 
-def get_test_samples(seed: int = 42):
+def get_test_samples(seed = 42):
     """Return raw EuroSAT images and labels from the shared test split."""
     dataset = datasets.EuroSAT("data", download=True)
     _, _, test_indices = get_split_indices(dataset.targets, seed)
     return [dataset[index] for index in test_indices]
 
 
-def make_transform(image_size: int):
+def make_transform(image_size):
     """Build the evaluation transform for a model's input resolution."""
     resize = [transforms.Resize(image_size)] if image_size != 64 else []
     return transforms.Compose(
@@ -53,7 +53,7 @@ def make_transform(image_size: int):
     )
 
 
-def register_activation_hooks(layers: dict[str, nn.Module],):
+def register_activation_hooks(layers,):
     """Capture selected layer outputs and return a hook cleanup function."""
     activations: dict[str, torch.Tensor] = {}
     handles = []

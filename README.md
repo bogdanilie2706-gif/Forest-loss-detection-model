@@ -19,6 +19,7 @@
 - [Results](#results)
 - [Dataset](#dataset)
 - [Models and training](#models-and-training)
+- [Inside the models](#inside-the-models)
 - [Running locally](#running-locally)
 - [Project structure](#project-structure)
 - [Scope and roadmap](#scope-and-roadmap)
@@ -103,6 +104,23 @@ Plots for the 15-epoch SimpleCNN are in [`results/cnn_e15/`](results/cnn_e15/).
 
 Full reports: [`cnn_e15`](results/cnn_e15/report_test.txt) · [`cnn_e30`](results/cnn_e30/report_test.txt) · [`resnet18_e15`](results/resnet18_e15/report_test.txt)
 
+## Inside the models
+
+To see what the networks respond to, `src/visualize.py` saves first-layer filters and feature maps for both models on the same test patches. Below is the same `Highway` patch (a diagonal road across fields) in each model; in the early layers both pick out the road and the field boundaries, and the maps get coarser with depth.
+
+<table>
+  <tr>
+    <th align="center">SimpleCNN, 30 epochs</th>
+    <th align="center">ResNet18, 15 epochs</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="results/visualizations/feature_maps_cnn_e30_highway.png" width="450" alt="SimpleCNN feature maps for a Highway patch"></td>
+    <td align="center"><img src="results/visualizations/feature_maps_resnet18_e15_highway.png" width="450" alt="ResNet18 feature maps for a Highway patch"></td>
+  </tr>
+</table>
+
+More figures (first-layer filters, how much fine-tuning changed ResNet18, Forest and misclassified patches) and a discussion of the limits are in [`notebooks/visualization.ipynb`](notebooks/visualization.ipynb).
+
 ## Dataset
 
 The data loader uses TorchVision's [EuroSAT](https://github.com/phelber/EuroSAT) dataset and downloads it to `data/` if it is not already present. It contains 27,000 RGB patches of 64 x 64 pixels from Sentinel-2, across 10 land-cover classes, including `Forest`.
@@ -119,7 +137,7 @@ The split is stratified and random (seed 42). Random horizontal and vertical fli
 
 **SimpleCNN** (about 391k parameters): four convolutional blocks with 32, 64, 128, and 256 channels. Each block is a 3 x 3 convolution, batch normalization, ReLU, and 2 x 2 max pooling. Adaptive average pooling feeds a dropout layer (0.3) and a 10-class linear classifier. Trained from scratch on 64 x 64 px images.
 
-**ResNet18** (about 11,18m parameters): TorchVision's ResNet18 with ImageNet pre-trained weights and the final layer replaced by a 10-class linear layer. All layers are fine-tuned. Images are resized to 128 x 128 px, and the learning rate is lower (`1e-4`).
+**ResNet18** (about 11.18M parameters): TorchVision's ResNet18 with ImageNet pre-trained weights and the final layer replaced by a 10-class linear layer. All layers are fine-tuned. Images are resized to 128 x 128 px, and the learning rate is lower (`1e-4`).
 
 **Shared training setup:**
 
@@ -161,6 +179,14 @@ python src/evaluate.py --name resnet18_e15 --arch resnet18 --image-size 128 --sp
 
 Reports and plots are written to `results/<run-name>/`.
 
+Generate the visualizations (needs the trained checkpoints):
+
+```bash
+python src/visualize.py first-layer
+python src/visualize.py samples
+python src/visualize.py feature-maps
+```
+
 The `Makefile` provides shorter commands:
 
 ```bash
@@ -181,9 +207,12 @@ src/
   model.py     SimpleCNN and ResNet18 builders
   train.py     Training loop and best-checkpoint saving
   evaluate.py  Metrics, classification reports, and plots
+  viz_utils.py Helpers for loading models and capturing activations
+  visualize.py Filter and feature-map figures
+notebooks/     Visualization notebook
 scripts/       Helper scripts (training status)
 checkpoints/   Training histories and saved model checkpoints
-results/       Reports, confusion matrices, and training curves
+results/       Reports, confusion matrices, training curves, and visualizations
 Makefile       Shortcuts for training and evaluation
 ```
 
@@ -197,6 +226,7 @@ The random split is useful for an initial baseline, but patches from the same sc
 
 - [x] Baseline CNN on EuroSAT RGB with train/validation/test evaluation
 - [x] Compare against a pretrained ResNet18
+- [x] Visualize first-layer filters and feature maps of both models
 - [ ] Build a custom dataset from Sentinel-2 imagery and Hansen Global Forest Change labels
 - [ ] Add the near-infrared band and NDVI as input
 - [ ] Split by geographic area instead of randomly
